@@ -2,114 +2,139 @@
 #include <string>
 using namespace std;
 
-struct Node {
+class Node {
+public:
     string title;
     int duration;
     Node* next;
+
+    Node(string t, int d) {
+        title = t;
+        duration = d;
+        next = NULL;
+    }
 };
 
-Node* head = NULL;
-Node* current = NULL;
+class Playlist {
+private:
+    Node* head;
+    Node* current;
 
-// Add song at end
-void addSong(string title, int duration) {
-    Node* n = new Node{title, duration, NULL};
-
-    if (head == NULL) {
-        head = n;
-        n->next = n;      // circular
-        current = head;
+public:
+    Playlist() {
+        head = NULL;
+        current = NULL;
     }
-    else {
+
+    // Add song at end
+    void addSong(string title, int duration) {
+        Node* n = new Node(title, duration);
+
+        if (head == NULL) {
+            head = n;
+            n->next = n;        // circular
+            current = head;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next != head)
+                temp = temp->next;
+
+            temp->next = n;
+            n->next = head;
+        }
+
+        cout << "Added: " << title << "\n";
+    }
+
+    // Delete song by title
+    void deleteSong(string title) {
+        if (head == NULL) {
+            cout << "Playlist empty.\n";
+            return;
+        }
+
         Node* temp = head;
-        while (temp->next != head)
-            temp = temp->next;
+        Node* prev = NULL;
 
-        temp->next = n;
-        n->next = head;
-    }
-    cout << "Added: " << title << "\n";
-}
+        do {
+            if (temp->title == title) {
 
-// Delete a song by title
-void deleteSong(string title) {
-    if (head == NULL) {
-        cout << "Playlist empty.\n";
-        return;
-    }
+                // Case: only one song
+                if (temp == head && temp->next == head) {
+                    delete temp;
+                    head = NULL;
+                    current = NULL;
+                    cout << "Deleted last song.\n";
+                    return;
+                }
 
-    Node* temp = head;
-    Node* prev = NULL;
+                // Case: deleting head
+                if (temp == head) {
+                    Node* last = head;
+                    while (last->next != head)
+                        last = last->next;
 
-    do {
-        if (temp->title == title) {
+                    head = head->next;
+                    last->next = head;
 
-            // Case: only 1 song
-            if (temp == head && temp->next == head) {
-                delete temp;
-                head = NULL;
-                current = NULL;
-                cout << "Deleted last song.\n";
-                return;
-            }
+                    if (current == temp)
+                        current = head;
 
-            // Case: deleting head
-            if (temp == head) {
-                Node* last = head;
-                while (last->next != head)
-                    last = last->next;
-                head = head->next;
-                last->next = head;
-                if (current == temp) current = head;
+                    delete temp;
+                    cout << "Deleted: " << title << "\n";
+                    return;
+                }
+
+                // Case: deleting middle/last
+                prev->next = temp->next;
+                if (current == temp)
+                    current = temp->next;
+
                 delete temp;
                 cout << "Deleted: " << title << "\n";
                 return;
             }
 
-            // Case: middle or last node
-            prev->next = temp->next;
-            if (current == temp) current = temp->next;
-            delete temp;
-            cout << "Deleted: " << title << "\n";
+            prev = temp;
+            temp = temp->next;
+
+        } while (temp != head);
+
+        cout << "Song not found.\n";
+    }
+
+    // Move to next song
+    void nextSong() {
+        if (current == NULL) {
+            cout << "Playlist empty.\n";
             return;
         }
 
-        prev = temp;
-        temp = temp->next;
-    }
-    while (temp != head);
-
-    cout << "Song not found.\n";
-}
-
-// Move to next song
-void nextSong() {
-    if (current == NULL) {
-        cout << "Playlist empty.\n";
-        return;
-    }
-    current = current->next;
-    cout << "Now playing: " << current->title 
-         << " (" << current->duration << "s)\n";
-}
-
-// Show all songs
-void showPlaylist() {
-    if (head == NULL) {
-        cout << "Playlist empty.\n";
-        return;
+        current = current->next;
+        cout << "Now playing: " << current->title
+             << " (" << current->duration << "s)\n";
     }
 
-    cout << "\n--- Playlist ---\n";
-    Node* temp = head;
-    do {
-        cout << temp->title << " (" << temp->duration << "s)\n";
-        temp = temp->next;
+    // Display playlist
+    void showPlaylist() {
+        if (head == NULL) {
+            cout << "Playlist empty.\n";
+            return;
+        }
+
+        cout << "\n--- Playlist ---\n";
+        Node* temp = head;
+
+        do {
+            cout << temp->title << " (" << temp->duration << "s)\n";
+            temp = temp->next;
+        } while (temp != head);
     }
-    while (temp != head);
-}
+};
 
 int main() {
+    Playlist p;
     int choice;
 
     while (true) {
@@ -126,16 +151,16 @@ int main() {
             cout << "Enter duration: ";
             cin >> d;
             cin.ignore();
-            addSong(t, d);
+            p.addSong(t, d);
         }
         else if (choice == 2) {
             string t;
             cout << "Enter song title to delete: ";
             getline(cin, t);
-            deleteSong(t);
+            p.deleteSong(t);
         }
-        else if (choice == 3) nextSong();
-        else if (choice == 4) showPlaylist();
+        else if (choice == 3) p.nextSong();
+        else if (choice == 4) p.showPlaylist();
         else if (choice == 5) break;
         else cout << "Invalid option.\n";
     }
