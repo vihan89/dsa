@@ -1,36 +1,48 @@
 #include <iostream>
-#include <vector>
 #include <queue>
-#include <stack>
 using namespace std;
 
-vector<vector<int>> graph;   // adjacency list
+#define MAX 100   // maximum number of people
 
-// Add a new person (new node)
+int graph[MAX][MAX];  // adjacency matrix
+int persons = 0;      // count of people added
+
+// Add new person
 void addPerson() {
-    graph.push_back(vector<int>());
-    cout << "Person " << graph.size()-1 << " added.\n";
-}
-
-// Create friendship (edge)
-void addFriendship(int a, int b) {
-    if (a >= graph.size() || b >= graph.size()) {
-        cout << "Invalid person ID.\n";
+    if (persons >= MAX) {
+        cout << "Maximum limit reached.\n";
         return;
     }
-    graph[a].push_back(b);
-    graph[b].push_back(a);
+
+    // Initialize new row and column to 0
+    for (int i = 0; i <= persons; i++) {
+        graph[persons][i] = 0;
+        graph[i][persons] = 0;
+    }
+
+    cout << "Person " << persons << " added.\n";
+    persons++;
+}
+
+// Add friendship (undirected)
+void addFriendship(int a, int b) {
+    if (a >= persons || b >= persons) {
+        cout << "Invalid ID.\n";
+        return;
+    }
+    graph[a][b] = 1;
+    graph[b][a] = 1;
     cout << "Friendship added.\n";
 }
 
-// BFS – list all friends
+// BFS traversal
 void BFS(int start) {
-    if (start >= graph.size()) {
-        cout << "Invalid ID.\n"; 
+    if (start >= persons) {
+        cout << "Invalid ID.\n";
         return;
     }
 
-    vector<bool> visited(graph.size(), false);
+    bool visited[MAX] = {false};
     queue<int> q;
 
     visited[start] = true;
@@ -42,44 +54,50 @@ void BFS(int start) {
         int node = q.front(); q.pop();
         cout << node << " ";
 
-        for (int f : graph[node]) {
-            if (!visited[f]) {
-                visited[f] = true;
-                q.push(f);
+        for (int i = 0; i < persons; i++) {
+            if (graph[node][i] == 1 && !visited[i]) {
+                visited[i] = true;
+                q.push(i);
             }
         }
     }
     cout << endl;
 }
 
-// DFS – check if connection exists
-bool DFS_util(int curr, int target, vector<bool> &visited) {
+// DFS utility
+bool DFS_util(int curr, int target, bool visited[]) {
     if (curr == target) return true;
 
     visited[curr] = true;
 
-    for (int f : graph[curr]) {
-        if (!visited[f]) {
-            if (DFS_util(f, target, visited)) return true;
+    for (int i = 0; i < persons; i++) {
+        if (graph[curr][i] == 1 && !visited[i]) {
+            if (DFS_util(i, target, visited))
+                return true;
         }
     }
     return false;
 }
 
+// DFS wrapper
 void DFS(int a, int b) {
-    vector<bool> visited(graph.size(), false);
+    bool visited[MAX] = {false};
+
     if (DFS_util(a, b, visited))
         cout << "Connection exists!\n";
     else
         cout << "No connection.\n";
 }
 
-// Display complete graph
+// Display adjacency matrix
 void display() {
-    cout << "\nSocial Network (Adjacency List):\n";
-    for (int i = 0; i < graph.size(); i++) {
-        cout << i << " -> ";
-        for (int f : graph[i]) cout << f << " ";
+    cout << "\nSocial Network (Adjacency Matrix):\n";
+
+    for (int i = 0; i < persons; i++) {
+        cout << i << ": ";
+        for (int j = 0; j < persons; j++) {
+            cout << graph[i][j] << " ";
+        }
         cout << endl;
     }
 }
@@ -107,4 +125,5 @@ int main() {
         else if (choice == 5) display();
         else if (choice == 6) break;
     }
+    return 0;
 }
